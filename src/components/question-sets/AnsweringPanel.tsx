@@ -67,6 +67,13 @@ export function AnsweringPanel({ questions, setId }: { questions: QuestionData[]
   const [historyOpenId, setHistoryOpenId] = useState<string | null>(null);
   const [history, setHistory] = useState<Record<string, HistoryAttempt[]>>({});
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [pasteBlockedId, setPasteBlockedId] = useState<string | null>(null);
+
+  // Answers must be typed from memory, like in an exam: block pasting and dropping text in.
+  function blockPaste(questionId: string, e: React.ClipboardEvent | React.DragEvent) {
+    e.preventDefault();
+    setPasteBlockedId(questionId);
+  }
 
   function setAnswer(questionId: string, value: string) {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
@@ -216,11 +223,21 @@ export function AnsweringPanel({ questions, setId }: { questions: QuestionData[]
               <p className="mb-3">{q.text}</p>
               <textarea
                 value={answers[q.id] ?? ""}
-                onChange={(e) => setAnswer(q.id, e.target.value)}
+                onChange={(e) => {
+                  setAnswer(q.id, e.target.value);
+                  if (pasteBlockedId === q.id) setPasteBlockedId(null);
+                }}
+                onPaste={(e) => blockPaste(q.id, e)}
+                onDrop={(e) => blockPaste(q.id, e)}
                 placeholder="Write your answer…"
                 rows={4}
                 className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
               />
+              {pasteBlockedId === q.id && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Pasting is turned off — type your answer from memory, like in an exam.
+                </p>
+              )}
               {mode === "immediate" && (
                 <div className="mt-2 flex items-center gap-3">
                   <button
