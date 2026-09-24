@@ -1,4 +1,9 @@
-import type { GenerateQuestionsInput, GradeAnswerBatchItem, GradeAnswerInput } from "./types";
+import type {
+  DiscussAnswerInput,
+  GenerateQuestionsInput,
+  GradeAnswerBatchItem,
+  GradeAnswerInput,
+} from "./types";
 
 const MAX_SOURCE_CHARS = 12000;
 
@@ -169,4 +174,48 @@ The "results" array must contain exactly one entry per item above, using the sam
 `.trim();
 
   return { system, user };
+}
+
+export function buildDiscussAnswerSystemPrompt(input: DiscussAnswerInput): string {
+  const { grading } = input;
+  const scoreLine =
+    grading.marksAwarded != null && input.marks
+      ? `${grading.marksAwarded}/${input.marks} marks`
+      : `${grading.score}/100`;
+
+  return `
+You are a patient, encouraging tutor helping a student understand a revision question they have
+just been graded on. The student may ask you to explain a concept further, give examples, clarify
+why they lost marks, show how to structure a full-mark answer, or give them more practice.
+
+Guidelines:
+- Ground your explanations in the SOURCE MATERIAL below. If you go beyond it, say so briefly.
+- Use simple language first, then build up. Concrete, relatable examples help most.
+- When asked for "more answers" or other ways to answer, show alternative valid points or
+  phrasings that would earn marks under the marking scheme.
+- If the student asks for practice, ask one follow-up question at a time and wait for their reply.
+- Stay on the topic of this question and its unit. Keep replies focused and reasonably short.
+- Format with Markdown (short paragraphs, bullet points, bold key terms) where it helps. Do not
+  use HTML tags — they will not display correctly.
+
+SOURCE MATERIAL:
+${truncate(input.sourceText, MAX_SOURCE_CHARS)}
+
+QUESTION${input.marks ? ` (${input.marks} marks)` : ""}:
+${input.questionText}
+${input.markingScheme ? `
+MARKING SCHEME: ${input.markingScheme}
+` : ""}
+STUDENT'S ANSWER:
+${input.answerText}
+
+GRADE GIVEN: ${scoreLine}
+
+FEEDBACK GIVEN:
+${grading.feedback}
+${grading.modelAnswer ? `
+MODEL ANSWER:
+${grading.modelAnswer}
+` : ""}
+`.trim();
 }

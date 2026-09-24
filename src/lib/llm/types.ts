@@ -39,10 +39,26 @@ export interface GradeAnswerBatchResult extends GradingResult {
   refId: string;
 }
 
+export interface DiscussionTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface DiscussAnswerInput {
+  questionText: string;
+  sourceText: string;
+  answerText: string;
+  marks?: number;
+  markingScheme?: string;
+  grading: GradingResult;
+  history: DiscussionTurn[];
+}
+
 export interface LLMProvider {
   readonly name: string;
   readonly model: string;
   generateQuestions(input: GenerateQuestionsInput): Promise<GeneratedQuestion[]>;
   gradeAnswer(input: GradeAnswerInput): Promise<GradingResult>;
   gradeAnswerBatch(items: GradeAnswerBatchItem[]): Promise<GradeAnswerBatchResult[]>;
+  discussAnswer(input: DiscussAnswerInput): Promise<string>;
 }

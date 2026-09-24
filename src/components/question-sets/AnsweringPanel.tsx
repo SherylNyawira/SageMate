@@ -3,8 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Markdown } from "@/components/ui/Markdown";
+import { DiscussionPanel } from "./DiscussionPanel";
 
 type GradingResult = {
+  id: string;
   score: number;
   marksAwarded?: number | null;
   feedback: string;
@@ -249,6 +251,7 @@ export function AnsweringPanel({ questions, setId }: { questions: QuestionData[]
                       {q.markingScheme}
                     </p>
                   )}
+                  <DiscussionPanel key={result.id} gradingId={result.id} />
                 </div>
               )}
               {gradingError && <p className="mt-2 text-xs text-danger">{gradingError}</p>}

@@ -14,3 +14,7 @@ export const submitBatchAttemptsSchema = z.object({
     )
     .min(1, "At least one answer is required"),
 });
+
+export const discussionMessageSchema = z.object({
+  content: z.string().trim().min(1, "Message is required").max(4000),
+});

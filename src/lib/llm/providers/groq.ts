@@ -1,11 +1,13 @@
 import Groq from "groq-sdk";
 import { z } from "zod";
 import {
+  buildDiscussAnswerSystemPrompt,
   buildGenerateQuestionsPrompt,
   buildGradeAnswerBatchPrompt,
   buildGradeAnswerPrompt,
 } from "../prompts";
 import type {
+  DiscussAnswerInput,
   GenerateQuestionsInput,
   GeneratedQuestion,
   GradeAnswerBatchItem,
@@ -77,6 +79,28 @@ export class GroqProvider implements LLMProvider {
       }
     }
     throw new Error(`Groq response did not match expected schema: ${String(lastError)}`);
+  }
+
+  async discussAnswer(input: DiscussAnswerInput): Promise<string> {
+    const system = buildDiscussAnswerSystemPrompt(input);
+    const ATTEMPTS = 3;
+    let lastError: unknown;
+    for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
+      try {
+        const completion = await this.client.chat.completions.create({
+          model: this.model,
+          messages: [{ role: "system", content: system }, ...input.history],
+          temperature: 0.5,
+          max_completion_tokens: 4096,
+        });
+        const reply = completion.choices[0]?.message?.content?.trim() ?? "";
+        if (reply) return reply;
+        lastError = new Error("Empty reply");
+      } catch (err) {
+        lastError = err;
+      }
+    }
+    throw new Error(`Groq discussion request failed: ${String(lastError)}`);
   }
 
   async generateQuestions(input: GenerateQuestionsInput): Promise<GeneratedQuestion[]> {
