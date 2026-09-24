@@ -26,7 +26,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${plexSans.variable} ${sourceSerif.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full">
+      <body className="flex min-h-full" suppressHydrationWarning>
         <Sidebar />
         <div className="flex min-w-0 flex-1 flex-col">{children}</div>
       </body>
